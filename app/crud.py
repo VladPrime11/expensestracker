@@ -13,12 +13,13 @@ def get_expenses(db: Session, skip: int = 0, limit: int = 10):
 def get_expense(db: Session, expense_id: int):
     return db.query(models.Expense).filter(models.Expense.id == expense_id).first()
 
-def create_expense(db: Session, expense: schemas.ExpenseCreate):
-    db_expense = models.Expense(**expense.dict())
+def create_expense(db: Session, expense: schemas.ExpenseCreate, user_id: int):
+    db_expense = models.Expense(**expense.dict(), user_id=user_id)
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
     return db_expense
+
 
 def delete_expense(db: Session, expense_id: int):
     db_expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
@@ -45,6 +46,10 @@ def get_user_by_username(db: Session, username: str):
 
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
+
+def get_expenses_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 10):
+    return db.query(models.Expense).filter(models.Expense.user_id == user_id).offset(skip).limit(limit).all()
+
 
 def create_user(db: Session, user: UserCreate):
     hashed_password = pwd_context.hash(user.password)

@@ -23,16 +23,16 @@ def get_db():
 
 # Routes for expenses
 @app.post("/expenses/", response_model=schemas.Expense)
-def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db),
-                   current_user: schemas.User = Depends(get_current_active_user)):
-    return crud.create_expense(db=db, expense=expense)
+def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+    return crud.create_expense(db=db, expense=expense, user_id=current_user.id)
+
 
 
 @app.get("/expenses/", response_model=list[schemas.Expense])
-def read_expenses(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
-                  current_user: schemas.User = Depends(get_current_active_user)):
-    expenses = crud.get_expenses(db, skip=skip, limit=limit)
+def read_expenses(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+    expenses = crud.get_expenses_by_user(db, user_id=current_user.id, skip=skip, limit=limit)
     return expenses
+
 
 
 @app.get("/expenses/{expense_id}", response_model=schemas.Expense)
