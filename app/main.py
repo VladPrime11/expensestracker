@@ -28,13 +28,15 @@ def create_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)
 
 
 @app.get("/expenses/", response_model=list[schemas.Expense])
-def read_expenses(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+def read_expenses(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
+                  current_user: schemas.User = Depends(auth.get_current_active_user)):
     expenses = crud.get_expenses_by_user(db, user_id=current_user.id, skip=skip, limit=limit)
     return expenses
 
 
 @app.get("/expenses/{expense_id}", response_model=schemas.Expense)
-def read_expense(expense_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+def read_expense(expense_id: int, db: Session = Depends(get_db),
+                 current_user: schemas.User = Depends(auth.get_current_active_user)):
     db_expense = crud.get_expense(db, expense_id=expense_id)
     if db_expense is None or db_expense.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Expense not found")
@@ -42,7 +44,8 @@ def read_expense(expense_id: int, db: Session = Depends(get_db), current_user: s
 
 
 @app.put("/expenses/{expense_id}", response_model=schemas.Expense)
-def update_expense(expense_id: int, expense: schemas.ExpenseCreate, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+def update_expense(expense_id: int, expense: schemas.ExpenseCreate, db: Session = Depends(get_db),
+                   current_user: schemas.User = Depends(auth.get_current_active_user)):
     db_expense = crud.update_expense(db, expense_id=expense_id, expense=expense)
     if db_expense is None or db_expense.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Expense not found")
@@ -50,7 +53,8 @@ def update_expense(expense_id: int, expense: schemas.ExpenseCreate, db: Session 
 
 
 @app.delete("/expenses/{expense_id}", response_model=schemas.Expense)
-def delete_expense(expense_id: int, db: Session = Depends(get_db), current_user: schemas.User = Depends(auth.get_current_active_user)):
+def delete_expense(expense_id: int, db: Session = Depends(get_db),
+                   current_user: schemas.User = Depends(auth.get_current_active_user)):
     db_expense = crud.delete_expense(db, expense_id=expense_id)
     if db_expense is None or db_expense.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Expense not found")
@@ -91,14 +95,26 @@ def read_users_me(current_user: schemas.User = Depends(auth.get_current_active_u
 
 @app.put("/users/me/", response_model=schemas.User)
 def update_user_me(
-    user_update: schemas.UserUpdate,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_active_user)
+        user_update: schemas.UserUpdate,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(auth.get_current_active_user)
 ):
     updated_user = crud.update_user(db, current_user.id, user_update)
     return updated_user
+
 
 # Get current admin
 @app.get("/users/me/admin/", response_model=schemas.User)
 def read_users_me_admin(current_user: schemas.User = Depends(auth.get_current_active_admin)):
     return current_user
+
+
+@app.post("/categories/", response_model=schemas.Category)
+def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_db),
+                    current_user: schemas.User = Depends(auth.get_current_active_user)):
+    return crud.create_category(db, category)
+
+
+@app.get("/categories/", response_model=list[schemas.Category])
+def read_categories(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    return crud.get_categories(db, skip=skip, limit=limit)

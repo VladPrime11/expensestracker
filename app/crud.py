@@ -1,52 +1,9 @@
-from http.client import HTTPException
-
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-
 from . import models, schemas
-from .models import User
-from .schemas import UserCreate
+from passlib.context import CryptContext
+from fastapi import HTTPException
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def get_expenses(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(models.Expense).offset(skip).limit(limit).all()
-
-
-def get_expense(db: Session, expense_id: int):
-    return db.query(models.Expense).filter(models.Expense.id == expense_id).first()
-
-
-def create_expense(db: Session, expense: schemas.ExpenseCreate, user_id: int):
-    db_expense = models.Expense(**expense.dict(), user_id=user_id)
-    db.add(db_expense)
-    db.commit()
-    db.refresh(db_expense)
-    return db_expense
-
-
-def delete_expense(db: Session, expense_id: int):
-    db_expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
-    db.delete(db_expense)
-    db.commit()
-    return db_expense
-
-
-def update_expense(db: Session, expense_id: int, expense: schemas.ExpenseCreate):
-    db_expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
-    if db_expense:
-        db_expense.amount = expense.amount
-        db_expense.description = expense.description
-        db_expense.category = expense.category
-        db_expense.date = expense.date
-        db.commit()
-        db.refresh(db_expense)
-    return db_expense
-
-
-def get_user(db: Session, user_id: int):
-    return db.query(User).filter(User.id == user_id).first()
 
 
 def get_user_by_username(db: Session, username: str):
@@ -54,11 +11,7 @@ def get_user_by_username(db: Session, username: str):
 
 
 def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
-
-
-def get_expenses_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 10):
-    return db.query(models.Expense).filter(models.Expense.user_id == user_id).offset(skip).limit(limit).all()
+    return db.query(models.User).filter(models.User.email == email).first()
 
 
 def create_user(db: Session, user: schemas.UserCreate):
@@ -85,3 +38,60 @@ def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate):
     db.commit()
     db.refresh(user)
     return user
+
+
+def create_category(db: Session, category: schemas.CategoryCreate):
+    db_category = models.Category(name=category.name)
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+
+def get_category(db: Session, category_id: int):
+    return db.query(models.Category).filter(models.Category.id == category_id).first()
+
+
+def get_categories(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(models.Category).offset(skip).limit(limit).all()
+
+
+def create_expense(db: Session, expense: schemas.ExpenseCreate, user_id: int):
+    db_expense = models.Expense(**expense.dict(), user_id=user_id)
+    db.add(db_expense)
+    db.commit()
+    db.refresh(db_expense)
+    return db_expense
+
+
+def get_expenses_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 10):
+    return db.query(models.Expense).filter(models.Expense.user_id == user_id).offset(skip).limit(limit).all()
+
+
+def get_expense(db: Session, expense_id: int):
+    return db.query(models.Expense).filter(models.Expense.id == expense_id).first()
+
+
+def update_expense(db: Session, expense_id: int, expense: schemas.ExpenseCreate):
+    db_expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
+    if not db_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    db_expense.amount = expense.amount
+    db_expense.description = expense.description
+    db_expense.date = expense.date
+    db_expense.category_id = expense.category_id
+
+    db.commit()
+    db.refresh(db_expense)
+    return db_expense
+
+
+def delete_expense(db: Session, expense_id: int):
+    db_expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
+    if not db_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    db.delete(db_expense)
+    db.commit()
+    return db_expense
