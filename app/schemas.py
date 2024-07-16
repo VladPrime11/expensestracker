@@ -1,6 +1,6 @@
 # app/schemas.py
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import date
 
 class ExpenseBase(BaseModel):
@@ -20,10 +20,15 @@ class Expense(ExpenseBase):
 
 class UserBase(BaseModel):
     username: str
-    email: str
+    email: EmailStr
 
 class UserCreate(UserBase):
     password: str
+
+class UserUpdate(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+    password: str | None = None
 
 class User(UserBase):
     id: int
