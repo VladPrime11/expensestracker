@@ -8,6 +8,20 @@ DATABASE_URL = "sqlite:///./expenses.db"
 
 Base = declarative_base()
 
+class Budget(Base):
+    __tablename__ = "budgets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    amount = Column(Float, nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    owner = relationship("User", back_populates="budgets")
+    category = relationship("Category")
+
+
 
 class User(Base):
     __tablename__ = "users"
@@ -25,6 +39,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     expenses = relationship("Expense", back_populates="category")
+
 
 class Expense(Base):
     __tablename__ = "expenses"

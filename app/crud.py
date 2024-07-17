@@ -23,7 +23,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     return db_user
 
 
-def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate):
+def update_user(db: Session, user_id: int, user_update: schemas.user.UserUpdate):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -95,3 +95,19 @@ def delete_expense(db: Session, expense_id: int):
     db.delete(db_expense)
     db.commit()
     return db_expense
+
+
+def create_budget(db: Session, budget: schemas.BudgetCreate, user_id: int):
+    db_budget = models.Budget(**budget.dict(), user_id=user_id)
+    db.add(db_budget)
+    db.commit()
+    db.refresh(db_budget)
+    return db_budget
+
+
+def get_budget(db: Session, budget_id: int):
+    return db.query(models.Budget).filter(models.Budget.id == budget_id).first()
+
+
+def get_budgets_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 10):
+    return db.query(models.Budget).filter(models.Budget.user_id == user_id).offset(skip).limit(limit).all()
